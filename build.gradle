@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        // 본인 PC에 설치된 JDK가 25라면 유지, 아니면 17이나 21로 변경
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 1. 핵심 웹 서버 (MVC 방식 사용)
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 2. 라이엇 API 통신 도구 (Feign)
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+    // 5. 데이터베이스 관련 (JPA & H2)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA 추가
+    runtimeOnly 'com.h2database:h2'                                      // H2 추가
+    // -------------------------
+
+    // 3. 편의 기능 및 개발 도구
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 4. 테스트 도구
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+dependencyManagement {
+    imports {
+        // Spring Boot 3.4.x와 호환되는 Cloud 버전은 2024.0.0 입니다.
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2024.0.0"
+    }
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
