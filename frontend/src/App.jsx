@@ -61,9 +61,33 @@ function App() {
     } catch (e) { alert("검색 실패"); } finally { setLoading(false); }
   }, [summonerName]);
 
+  // --- 통계 계산 섹션 ---
   const winRate = result ? Math.round((result.matchDetails.filter(m => m.win).length / result.matchDetails.length) * 100) : 0;
   const currentMmr = result ? result.standardMmr + (result.lpChange * 2) : 0;
   const mmrDiff = result ? currentMmr - result.standardMmr : 0;
+
+  // 챔피언별 상위 통계 추출 로직
+  const getChampStats = () => {
+    if (!result || !result.matchDetails) return [];
+    const stats = {};
+    result.matchDetails.forEach(m => {
+      if (!stats[m.championName]) {
+        stats[m.championName] = { name: m.championName, plays: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
+      }
+      const s = stats[m.championName];
+      s.plays += 1;
+      if (m.win) s.wins += 1;
+      s.kills += m.kills;
+      s.deaths += m.deaths;
+      s.assists += m.assists;
+    });
+
+    return Object.values(stats)
+      .sort((a, b) => b.plays - a.plays) // 많이 플레이한 순서
+      .slice(0, 3); // 상위 3개만 표시
+  };
+
+  const topChamps = getChampStats();
 
   return (
     <div className="app-container">
@@ -87,9 +111,7 @@ function App() {
           <section className="analysis-dashboard">
             <div className="dash-header">
               <div className="profile-container">
-                {/* 1. 후광(Shadow)을 담당하는 박스 */}
                 <div className={`tier-badge-wrap tier-${(result.summoner.tier || 'unranked').toLowerCase()}`}>
-                  {/* 2. 이미지 커팅(Clipper)을 담당하는 박스 */}
                   <div className="tier-img-clipper">
                     <img src={getTierImg(result.summoner.tier)} alt="tier" className="tier-main-img" />
                   </div>
@@ -124,6 +146,26 @@ function App() {
                 <div className="progress-bar" style={{ width: `${winRate}%` }}></div>
                 <div className="progress-guide-line"></div>
               </div>
+            </div>
+
+            {/* --- 새롭게 추가된 챔피언별 요약 섹션 --- */}
+            <div className="top-champs-section">
+              {topChamps.map((ch, idx) => (
+                <div key={idx} className="champ-stat-card">
+                  <img src={getChampImg(ch.name)} alt={ch.name} className="stat-champ-img" />
+                  <div className="stat-info">
+                    <div className="stat-name">{dataMap.champ[ch.name] || ch.name}</div>
+                    <div className="stat-detail">
+                      <span className="stat-winrate">{Math.round((ch.wins / ch.plays) * 100)}%</span>
+                      <span className="stat-plays">({ch.plays}판)</span>
+                      <span className="stat-kda">{((ch.kills + ch.assists) / Math.max(1, ch.deaths)).toFixed(2)}:1</span>
+                    </div>
+                  </div>
+                  <div className="mini-progress">
+                    <div className="mini-bar" style={{ width: `${(ch.wins / ch.plays) * 100}%` }}></div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             <div className={`analysis-msg-box ${mmrDiff < -20 ? 'danger' : 'safe'}`}>
