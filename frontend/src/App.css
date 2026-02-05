@@ -1,0 +1,226 @@
+/* --- 기본 초기화 및 변수 --- */
+:root {
+  --bg-body: #0f121a;
+  --bg-card: #1a1e29;
+  --win-blue: #28344e;
+  --lose-red: #59343b;
+  --accent-blue: #3c52ff;
+  --text-main: #f5f5f5;
+  --text-sub: #9e9eb1;
+  --border-color: #2d3345;
+}
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* --- 상단 헤더 --- */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 28px;
+  letter-spacing: -1px;
+  margin-bottom: 20px;
+}
+
+.search-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.search-box input {
+  width: 350px;
+  padding: 14px 20px;
+  background: #1a1e29;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: white;
+  font-size: 15px;
+}
+
+.search-box button {
+  padding: 0 30px;
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.search-box button:hover {
+  opacity: 0.8;
+}
+
+/* --- [핵심] 분석 대시보드 --- */
+.analysis-dashboard {
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 30px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-container {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+/* 티어 이미지를 감싸는 외부 박스: 후광 전용 (overflow 제거됨) */
+.tier-badge-wrap {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+/* 이미지를 동그랗게 잘라내는 내부 박스 */
+.tier-img-clipper {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden; /* 이미지를 여기서 자름 */
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #2d3345;
+  position: relative;
+}
+
+.tier-main-img {
+  width: 380px;
+  height: 380px;
+  object-fit: contain;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.8));
+  pointer-events: none;
+}
+
+/* --- 티어별 후광 컬러 (박스 바깥으로 정상 출력됨) --- */
+.tier-iron { box-shadow: 0 0 30px rgba(161, 157, 155, 0.4) !important; }
+.tier-bronze { box-shadow: 0 0 30px rgba(187, 142, 113, 0.5) !important; }
+.tier-silver { box-shadow: 0 0 30px rgba(189, 212, 216, 0.5) !important; }
+.tier-gold { box-shadow: 0 0 35px rgba(240, 230, 145, 0.5) !important; }
+.tier-platinum { box-shadow: 0 0 35px rgba(100, 182, 175, 0.6) !important; }
+.tier-emerald { box-shadow: 0 0 45px rgba(46, 203, 113, 0.4) !important; }
+.tier-diamond { box-shadow: 0 0 45px rgba(108, 65, 255, 0.5) !important; }
+.tier-master { box-shadow: 0 0 45px rgba(157, 72, 246, 0.5) !important; }
+.tier-grandmaster { box-shadow: 0 0 45px rgba(239, 51, 51, 0.5) !important; }
+.tier-challenger { box-shadow: 0 0 55px rgba(244, 196, 75, 0.6) !important; }
+.tier-unranked { box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important; }
+
+/* 애니메이션 */
+@keyframes pulse-glow {
+  0% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.2); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+.tier-diamond, .tier-master, .tier-grandmaster, .tier-challenger {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* --- 나머지 스타일 유지 --- */
+.user-text-info .ai-badge {
+  background: var(--accent-blue);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.user-text-info .tier-name {
+  font-size: 42px;
+  font-weight: 800;
+  margin: 5px 0;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.user-text-info .summoner-name {
+  font-size: 18px;
+  color: var(--text-sub);
+}
+
+.mmr-info-panel { text-align: right; }
+.std-mmr-text { font-size: 14px; color: var(--text-sub); margin-bottom: 5px; }
+.current-mmr-box { color: #5383e8; font-weight: 900; }
+.mmr-value { font-size: 64px; line-height: 1; }
+.mmr-unit { font-size: 24px; margin-left: 8px; }
+.mmr-diff-tag { font-size: 18px; font-weight: bold; margin-top: 10px; }
+.mmr-diff-tag.up { color: #ff4e50; }
+.mmr-diff-tag.down { color: #5383e8; }
+
+.winrate-section { margin-top: 40px; }
+.winrate-labels { display: flex; justify-content: space-between; font-size: 15px; margin-bottom: 12px; }
+.status-good { color: #00ff88; font-weight: bold; }
+.status-low { color: #ff4e50; font-weight: bold; }
+.progress-container { height: 14px; background: #2d3345; border-radius: 7px; position: relative; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #5383e8, #3c52ff); border-radius: 7px; transition: width 1s ease-in-out; }
+.progress-guide-line { position: absolute; left: 50%; width: 2px; height: 100%; background: rgba(255, 255, 255, 0.3); top: 0; }
+
+.analysis-msg-box { margin-top: 25px; padding: 18px 25px; border-radius: 8px; font-size: 15px; line-height: 1.5; }
+.analysis-msg-box.safe { background: rgba(0, 255, 136, 0.08); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.2); }
+.analysis-msg-box.danger { background: rgba(255, 78, 80, 0.08); color: #ff4e50; border: 1px solid rgba(255, 78, 80, 0.2); }
+
+.match-list { display: flex; flex-direction: column; gap: 10px; }
+.match-card {
+  display: grid !important;
+  grid-template-columns: 90px 180px 130px 170px 1fr;
+  align-items: center;
+  padding: 20px 25px;
+  border-radius: 6px;
+  border-left: 8px solid;
+}
+.match-card.win { background: var(--win-blue); border-left-color: #5383e8; }
+.match-card.lose { background: var(--lose-red); border-left-color: #e84057; }
+.res-status { font-weight: 900; font-size: 16px; margin-bottom: 5px; }
+.sub-text { font-size: 12px; color: var(--text-sub); }
+.champ-portrait-wrap { display: flex; align-items: center; gap: 8px; }
+.champ-main-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.1); }
+.icon-column { display: flex; flex-direction: column; gap: 3px; }
+.icon-column img { width: 26px; height: 26px; border-radius: 4px; }
+.rune-circle { border-radius: 50% !important; background: #000; }
+.kda-text { font-size: 18px; letter-spacing: -0.5px; }
+.kda-text .d { color: #ff4e50; }
+.kda-ratio { font-size: 13px; color: var(--text-sub); margin-top: 4px; }
+.item-layout { display: grid; grid-template-columns: repeat(4, 32px); gap: 3px; }
+.item-slot { width: 32px; height: 32px; background: rgba(0, 0, 0, 0.5); border-radius: 4px; overflow: hidden; }
+.item-slot img { width: 100%; height: 100%; object-fit: cover; }
+.col-players { display: flex; gap: 20px; border-left: 1px solid rgba(255, 255, 255, 0.1); padding-left: 25px; }
+.team-group { display: flex; flex-direction: column; gap: 3px; }
+.player-row { display: flex; align-items: center; gap: 6px; cursor: pointer; width: 110px; }
+.player-row img { width: 20px; height: 20px; border-radius: 3px; }
+.player-row span { font-size: 12px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-row:hover span { color: white; text-decoration: underline; }
+.enemy-name { color: #ff9999; }
