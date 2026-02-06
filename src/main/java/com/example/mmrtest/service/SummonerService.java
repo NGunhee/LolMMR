@@ -27,7 +27,7 @@ public class SummonerService {
      */
     public int convertTierToMmr(String tier, String rank) {
         if (tier == null || tier.equals("UNRANKED") || tier.isEmpty()) return 1000;
-        
+
         Map<String, Integer> base = Map.of(
                 "IRON", 500, "BRONZE", 700, "SILVER", 900, "GOLD", 1100,
                 "PLATINUM", 1300, "EMERALD", 1500, "DIAMOND", 1700,

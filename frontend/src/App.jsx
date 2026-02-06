@@ -2,10 +2,27 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import './App.css';
 
+// --- 전역 설정 ---
+const LOL_VERSION = "15.2.1"; 
+
 // --- 유틸리티 함수 ---
-const getChampImg = (name) => `https://ddragon.leagueoflegends.com/cdn/14.3.1/img/champion/${name}.png`;
-const getItemImg = (id) => id === 0 ? null : `https://ddragon.leagueoflegends.com/cdn/14.3.1/img/item/${id}.png`;
-const getSpellImg = (id, spellMap) => spellMap[id] ? `https://ddragon.leagueoflegends.com/cdn/14.3.1/img/spell/${spellMap[id]}.png` : null;
+const getChampImg = (name) => {
+  if (!name) return "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/ext/0.jpg";
+  
+  // Yunara 같은 특수 케이스나 오타 데이터 방어 로직
+  // 공식 데이터 드래곤에 없는 이름일 경우를 대비해 첫 글자 대문자화
+  const formattedName = name.charAt(0).toUpperCase() + name.slice(1);
+  
+  // 만약 이름이 "Yunara"라면 다른 챔피언으로 매칭하거나 기본 이미지를 반환하도록 설정 가능
+  if (formattedName === "Yunara") {
+    return "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/ext/0.jpg"; // 기본 이미지
+  }
+
+  return `https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/img/champion/${formattedName}.png`;
+};
+
+const getItemImg = (id) => id === 0 ? null : `https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/img/item/${id}.png`;
+const getSpellImg = (id, spellMap) => spellMap[id] ? `https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/img/spell/${spellMap[id]}.png` : null;
 const getRuneImg = (id, runeMap) => runeMap[id] ? `https://ddragon.leagueoflegends.com/cdn/img/${runeMap[id]}` : null;
 
 const getTierImg = (tier) => {
@@ -34,11 +51,16 @@ function App() {
     const loadGameData = async () => {
       try {
         const [c, s, r] = await Promise.all([
-          axios.get('https://ddragon.leagueoflegends.com/cdn/14.3.1/data/ko_KR/champion.json'),
-          axios.get('https://ddragon.leagueoflegends.com/cdn/14.3.1/data/ko_KR/summoner.json'),
-          axios.get('https://ddragon.leagueoflegends.com/cdn/14.3.1/data/ko_KR/runesReforged.json')
+          axios.get(`https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/data/ko_KR/champion.json`),
+          axios.get(`https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/data/ko_KR/summoner.json`),
+          axios.get(`https://ddragon.leagueoflegends.com/cdn/${LOL_VERSION}/data/ko_KR/runesReforged.json`)
         ]);
-        const cMap = {}; Object.values(c.data.data).forEach(x => cMap[x.id] = x.name);
+        const cMap = {}; 
+        Object.values(c.data.data).forEach(x => cMap[x.id] = x.name);
+        
+        // 데이터에 없는 챔피언(Yunara 등) 강제 매핑 (필요시)
+        cMap["Yunara"] = "알 수 없는 챔피언"; 
+
         const sMap = {}; Object.values(s.data.data).forEach(x => sMap[x.key] = x.id);
         const rMap = {}; r.data.forEach(st => { 
           rMap[st.id] = st.icon; 
@@ -61,30 +83,26 @@ function App() {
     } catch (e) { alert("검색 실패"); } finally { setLoading(false); }
   }, [summonerName]);
 
-  // --- 통계 계산 섹션 ---
   const winRate = result ? Math.round((result.matchDetails.filter(m => m.win).length / result.matchDetails.length) * 100) : 0;
   const currentMmr = result ? result.standardMmr + (result.lpChange * 2) : 0;
   const mmrDiff = result ? currentMmr - result.standardMmr : 0;
 
-  // 챔피언별 상위 통계 추출 로직
   const getChampStats = () => {
     if (!result || !result.matchDetails) return [];
     const stats = {};
     result.matchDetails.forEach(m => {
-      if (!stats[m.championName]) {
-        stats[m.championName] = { name: m.championName, plays: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
+      const name = m.championName;
+      if (!stats[name]) {
+        stats[name] = { name: name, plays: 0, wins: 0, kills: 0, deaths: 0, assists: 0 };
       }
-      const s = stats[m.championName];
+      const s = stats[name];
       s.plays += 1;
       if (m.win) s.wins += 1;
       s.kills += m.kills;
       s.deaths += m.deaths;
       s.assists += m.assists;
     });
-
-    return Object.values(stats)
-      .sort((a, b) => b.plays - a.plays) // 많이 플레이한 순서
-      .slice(0, 3); // 상위 3개만 표시
+    return Object.values(stats).sort((a, b) => b.plays - a.plays).slice(0, 3);
   };
 
   const topChamps = getChampStats();
@@ -148,11 +166,15 @@ function App() {
               </div>
             </div>
 
-            {/* --- 새롭게 추가된 챔피언별 요약 섹션 --- */}
             <div className="top-champs-section">
               {topChamps.map((ch, idx) => (
                 <div key={idx} className="champ-stat-card">
-                  <img src={getChampImg(ch.name)} alt={ch.name} className="stat-champ-img" />
+                  <img 
+                    src={getChampImg(ch.name)} 
+                    alt={ch.name} 
+                    className="stat-champ-img"
+                    onError={(e) => { e.target.src = "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/ext/0.jpg"; }} 
+                  />
                   <div className="stat-info">
                     <div className="stat-name">{dataMap.champ[ch.name] || ch.name}</div>
                     <div className="stat-detail">
@@ -185,7 +207,12 @@ function App() {
                 </div>
                 <div className="col-champ">
                   <div className="champ-portrait-wrap">
-                    <img className="champ-main-img" src={getChampImg(m.championName)} alt="champ" />
+                    <img 
+                      className="champ-main-img" 
+                      src={getChampImg(m.championName)} 
+                      alt="champ" 
+                      onError={(e) => { e.target.src = "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/ext/0.jpg"; }}
+                    />
                     <div className="icon-column">
                       <img src={getSpellImg(m.spell1Id, dataMap.spell)} alt="s" />
                       <img src={getSpellImg(m.spell2Id, dataMap.spell)} alt="s" />
@@ -195,8 +222,9 @@ function App() {
                       <img src={getRuneImg(m.subRuneId, dataMap.rune)} alt="r" />
                     </div>
                   </div>
-                  <div className="champ-ko-name">{dataMap.champ[m.championName]}</div>
+                  <div className="champ-ko-name">{dataMap.champ[m.championName] || m.championName}</div>
                 </div>
+                {/* ... (생략된 뒷부분은 기존과 동일) ... */}
                 <div className="col-stats">
                   <div className="kda-text"><strong>{m.kills}</strong> / <span className="d">{m.deaths}</span> / <strong>{m.assists}</strong></div>
                   <div className="kda-ratio">{((m.kills + m.assists) / Math.max(1, m.deaths)).toFixed(2)}:1 평점</div>
@@ -213,7 +241,11 @@ function App() {
                     <div key={start} className="team-group">
                       {m.teamMembers.slice(start, start + 5).map((name, i) => (
                         <div key={i} className="player-row" onClick={() => handleSearch(name)}>
-                          <img src={getChampImg(m.teamChamps[start + i])} alt="p" />
+                          <img 
+                            src={getChampImg(m.teamChamps[start + i])} 
+                            alt="p" 
+                            onError={(e) => { e.target.src = "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/ext/0.jpg"; }}
+                          />
                           <span className={start === 5 ? 'enemy-name' : 'team-name'}>{name.split('#')[0]}</span>
                         </div>
                       ))}
